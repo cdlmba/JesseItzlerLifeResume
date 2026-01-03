@@ -1,0 +1,81 @@
+
+import React, { useState, useEffect } from 'react';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import AnnualPlanner from './components/AnnualPlanner';
+import WeeklyWinComponent from './components/WeeklyWin';
+import AICoach from './components/AICoach';
+import YearPrep from './components/YearPrep';
+import { AppState, AnnualPlan, WeeklyWin, PrepItem } from './types';
+
+const DEFAULT_PREP: PrepItem[] = [
+  { id: 'resume-audit', task: 'The Life Resume Audit', description: 'Be brutally honest: If last year was a chapter in your biography, would anyone want to read it? Score your experiences.', completed: false },
+  { id: 'primary-focus', task: 'Identify Your "North Star"', description: 'The one singular focus that dictates every other decision this year.', completed: false },
+  { id: 'misogi-lock', task: 'Lock the Misogi', description: 'The 50/50 failure event. Book the flight, pay the registration, or announce the date. No turning back.', completed: false },
+  { id: 'life-first-cal', task: 'Life-First Calendar Reset', description: 'Schedule vacations, dates with your spouse, and family rituals BEFORE work. Work is the filler, life is the container.', completed: false },
+  { id: 'kevin-rule-6', task: 'The 8-Week Clock', description: 'Schedule your 6 "Kevin\'s Rule" events—one every 8 weeks. These are your mini-misogis.', completed: false },
+  { id: 'morning-60', task: 'The First 60 Protocol', description: 'Commit to the protocol: No digital input (phone) for 30-60 mins, 20oz hydration, and outdoor sunlight.', completed: false },
+  { id: 'env-purge', task: 'The Friction Purge', description: 'Tidy your desk and clear your digital inbox. High performance requires zero friction.', completed: false },
+  { id: 'donate-clothes', task: 'Donate Old Clothes', description: 'Declutter your physical space to declutter your mind. Pass on what you no longer need.', completed: false },
+  { id: 'no-negotiation', task: 'Sign the "No-Negotiation" Pact', description: 'Once it is on the calendar, the debate is over. We don\'t negotiate with our goals.', completed: false },
+];
+
+const INITIAL_PLAN: AnnualPlan = {
+  year: new Date().getFullYear(),
+  theme: "Living Uncommon",
+  misogi: {
+    title: "",
+    description: "",
+    date: "",
+    status: 'planned'
+  },
+  big4: [],
+  kevinRuleEvents: []
+};
+
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [state, setState] = useState<AppState>(() => {
+    const saved = localStorage.getItem('itzler_app_state');
+    if (saved) return JSON.parse(saved);
+    return {
+      annualPlan: INITIAL_PLAN,
+      weeklyWins: [],
+      prepChecklist: DEFAULT_PREP
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('itzler_app_state', JSON.stringify(state));
+  }, [state]);
+
+  const updateAnnualPlan = (annualPlan: AnnualPlan) => {
+    setState(prev => ({ ...prev, annualPlan }));
+  };
+
+  const addWeeklyWin = (win: WeeklyWin) => {
+    setState(prev => ({ ...prev, weeklyWins: [win, ...prev.weeklyWins] }));
+    setActiveTab('dashboard');
+  };
+
+  const togglePrepItem = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      prepChecklist: prev.prepChecklist.map(item => 
+        item.id === id ? { ...item, completed: !item.completed } : item
+      )
+    }));
+  };
+
+  return (
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      {activeTab === 'dashboard' && <Dashboard state={state} />}
+      {activeTab === 'prep' && <YearPrep checklist={state.prepChecklist} onToggle={togglePrepItem} />}
+      {activeTab === 'annual' && <AnnualPlanner plan={state.annualPlan} onUpdate={updateAnnualPlan} />}
+      {activeTab === 'weekly' && <WeeklyWinComponent onSave={addWeeklyWin} />}
+      {activeTab === 'coach' && <AICoach state={state} />}
+    </Layout>
+  );
+};
+
+export default App;
