@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout.tsx';
-import Dashboard from './components/Dashboard.tsx';
-import AnnualPlanner from './components/AnnualPlanner.tsx';
-import WeeklyWinComponent from './components/WeeklyWin.tsx';
-import AICoach from './components/AICoach.tsx';
-import YearPrep from './components/YearPrep.tsx';
-import { AppState, AnnualPlan, WeeklyWin, PrepItem } from './types.ts';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import AnnualPlanner from './components/AnnualPlanner';
+import WeeklyWinComponent from './components/WeeklyWin';
+import AICoach from './components/AICoach';
+import YearPrep from './components/YearPrep';
+import { AppState, AnnualPlan, WeeklyWin, PrepItem } from './types';
 
 const DEFAULT_PREP: PrepItem[] = [
   { id: 'resume-audit', task: 'The Life Resume Audit', description: 'Be brutally honest: If last year was a chapter in your biography, would anyone want to read it? Score your experiences.', completed: false },
