@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { WeeklyWin } from '../types';
+import { WeeklyWin } from '../types.ts';
 
 interface WeeklyWinProps {
   onSave: (win: WeeklyWin) => void;
