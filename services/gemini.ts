@@ -2,10 +2,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AnnualPlan, WeeklyWin } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Helper to get AI instance with current key
+const getAI = () => {
+  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : '';
+  return new GoogleGenAI({ apiKey: apiKey || '' });
+};
 
 export const getCoachAdvice = async (plan: AnnualPlan, weeklyHistory: WeeklyWin[], query: string) => {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `
@@ -41,6 +46,7 @@ export const getCoachAdvice = async (plan: AnnualPlan, weeklyHistory: WeeklyWin[
 
 export const suggestMisogi = async (interests: string) => {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `The user is interested in: ${interests}. 
