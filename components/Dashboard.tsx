@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AppState } from '../types';
+import { AppState } from '../types.ts';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface DashboardProps {
@@ -23,7 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-24">
-      {/* Top Banner - Jesse Style */}
+      {/* Top Banner */}
       <div className="bg-white p-1 rounded-3xl">
         <div className="bg-black p-8 rounded-[calc(1.5rem+4px)] flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="text-center md:text-left">
@@ -44,7 +44,6 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
       </div>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* The 8-Week Clock */}
         <div className="lg:col-span-2 glass-panel p-10 rounded-3xl border-l-8 border-red-600">
           <div className="flex items-center justify-between mb-10">
             <div>
@@ -53,7 +52,6 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
             </div>
             <div className="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">KEVIN'S RULE</div>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {annualPlan.kevinRuleEvents.length > 0 ? (
               annualPlan.kevinRuleEvents.map((event, i) => (
@@ -69,100 +67,29 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
                 </div>
               ))
             ) : (
-              <div className="col-span-2 py-16 text-center border-2 border-dashed border-neutral-800 rounded-3xl group cursor-pointer hover:border-red-600/30 transition-all">
+              <div className="col-span-2 py-16 text-center border-2 border-dashed border-neutral-800 rounded-3xl">
                 <p className="text-neutral-500 text-sm font-black uppercase tracking-[0.2em]">Your clock is empty</p>
-                <p className="text-[10px] text-neutral-700 mt-2 italic">"If it's not on the calendar, it doesn't exist."</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* The Anchor: Misogi */}
         <div className="bg-red-600 p-10 rounded-3xl relative overflow-hidden flex flex-col justify-between group">
-          <div className="absolute top-0 right-0 p-8 text-9xl opacity-[0.1] font-black italic select-none group-hover:opacity-[0.2] transition-all">🏔️</div>
           <div className="relative z-10">
             <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-8">The Anchor</h3>
             <div className="bg-black p-8 rounded-2xl shadow-2xl">
               {annualPlan.misogi.title ? (
                 <>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-                    <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Misogi Confirmed</span>
-                  </div>
-                  <h4 className="text-3xl font-black text-white italic mb-4 leading-tight uppercase tracking-tighter">{annualPlan.misogi.title}</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed mb-8 italic line-clamp-4">"{annualPlan.misogi.description}"</p>
-                  <div className="pt-6 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-[10px] font-black text-neutral-600 uppercase">Success Rate</span>
-                    <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">50/50</span>
-                  </div>
+                  <h4 className="text-3xl font-black text-white italic mb-4 uppercase tracking-tighter">{annualPlan.misogi.title}</h4>
+                  <p className="text-[11px] text-neutral-500 italic line-clamp-4">"{annualPlan.misogi.description}"</p>
                 </>
               ) : (
-                <div className="text-center py-10">
-                  <p className="text-neutral-500 text-xs font-black italic uppercase tracking-widest mb-6">"What scares you?"</p>
-                  <button className="w-full py-4 bg-white rounded-xl text-xs font-black text-black uppercase tracking-[0.3em] hover:bg-neutral-200 transition-all active:scale-95">SET THE ANCHOR</button>
-                </div>
+                <p className="text-white/50 text-xs font-black uppercase tracking-widest">No Anchor Set</p>
               )}
             </div>
           </div>
         </div>
       </section>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Big 4 Visualization */}
-        <section className="glass-panel p-10 rounded-3xl border-t-8 border-white">
-          <div className="flex items-center justify-between mb-10">
-            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Big 4 Audit</h3>
-            <span className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">Winning Only</span>
-          </div>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#171717" />
-                <XAxis dataKey="name" stroke="#525252" fontSize={11} fontWeight="900" tickLine={false} axisLine={false} />
-                <YAxis hide domain={[0, 100]} />
-                <Tooltip 
-                  cursor={{fill: 'rgba(255,255,255,0.02)'}}
-                  contentStyle={{ backgroundColor: '#000', border: '1px solid #262626', borderRadius: '12px', fontSize: '11px' }}
-                  itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                />
-                <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={48}>
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* Recent Momentum */}
-        <section className="glass-panel p-10 rounded-3xl border-t-8 border-red-600">
-          <div className="flex items-center justify-between mb-10">
-            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Momentum</h3>
-            <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Brown Bagging It</span>
-          </div>
-          <div className="space-y-4">
-            {weeklyWins.length > 0 ? (
-              weeklyWins.slice(0, 4).map(win => (
-                <div key={win.id} className="p-6 bg-neutral-900/50 rounded-2xl flex items-center justify-between border border-white/5 hover:border-white/10 transition-all">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-neutral-600 uppercase mb-1 tracking-widest">{win.weekStart}</span>
-                    <span className="text-sm text-white font-bold italic line-clamp-1">"{win.reflections}"</span>
-                  </div>
-                  <div className="w-12 h-12 rounded-xl bg-black border border-white/10 flex items-center justify-center text-lg font-black text-red-600 shadow-xl">
-                    {win.score}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-16 text-center text-neutral-600 italic text-sm font-bold uppercase tracking-widest">
-                "Winning is a habit. So is losing."
-                <br/><span className="text-red-600 mt-2 block">Log your first week.</span>
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
     </div>
   );
 };

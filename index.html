@@ -19,18 +19,6 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .accent-gradient {
-            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
-        }
-        .text-accent {
-            color: #ef4444;
-        }
-        .border-accent {
-            border-color: #ef4444;
-        }
-        .bg-accent {
-            background-color: #ef4444;
-        }
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -44,7 +32,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #ef4444;
         }
-        /* Custom styles for range inputs to match Jesse's aesthetic */
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -57,7 +44,6 @@
         }
     </style>
 <script>
-    // Critical: Shim process globally before any modules load
     window.process = window.process || { env: { API_KEY: '' } };
     window.global = window;
 </script>
@@ -65,19 +51,18 @@
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
+    "react/": "https://esm.sh/react@19.0.0/",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/": "https://esm.sh/react-dom@19.0.0/",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
     "@google/genai": "https://esm.sh/@google/genai@0.21.0",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <!-- Explicitly load index.tsx to ensure execution on Vercel deployment -->
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>
