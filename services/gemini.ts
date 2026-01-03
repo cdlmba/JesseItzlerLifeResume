@@ -1,13 +1,13 @@
+/// <reference types="vite/client" />
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AnnualPlan, WeeklyWin } from "../types.ts";
 
 const getAI = () => {
-  // Use the literal strings that Vite is configured to replace
-  // We use OR logic here to catch whichever one is defined
-  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || '';
+  // Use Vite's standard environment standard
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY || '';
 
   if (!apiKey || apiKey === "undefined") {
-    console.error("CRITICAL: Gemini API Key is empty or undefined in the browser.");
+    console.error("CRITICAL: Gemini API Key is missing. Make sure VITE_GEMINI_API_KEY is in your .env.local file and you have restarted the dev server.");
   }
 
   return new GoogleGenerativeAI(apiKey);
@@ -16,7 +16,7 @@ const getAI = () => {
 export const getCoachAdvice = async (plan: AnnualPlan, weeklyHistory: WeeklyWin[], query: string) => {
   try {
     const genAI = getAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     const context = `You are Jesse Itzler, the high-performance coach. 
 Plan: ${JSON.stringify(plan)}
@@ -36,7 +36,7 @@ export const suggestMisogi = async (interests: string) => {
   try {
     const genAI = getAI();
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-latest",
       generationConfig: {
         responseMimeType: "application/json",
       }
