@@ -16,7 +16,7 @@ const getAI = () => {
 export const getCoachAdvice = async (plan: AnnualPlan, weeklyHistory: WeeklyWin[], query: string) => {
   try {
     const genAI = getAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const context = `You are Jesse Itzler, the high-performance coach. 
 Plan: ${JSON.stringify(plan)}
@@ -36,7 +36,7 @@ export const suggestMisogi = async (interests: string) => {
   try {
     const genAI = getAI();
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-1.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
       }
