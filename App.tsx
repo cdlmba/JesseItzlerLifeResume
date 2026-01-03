@@ -34,7 +34,6 @@ const INITIAL_PLAN: AnnualPlan = {
 };
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem('itzler_app_state');
     if (saved) return JSON.parse(saved);
@@ -45,9 +44,17 @@ const App: React.FC = () => {
     };
   });
 
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('itzler_active_tab') || 'dashboard';
+  });
+
   useEffect(() => {
     localStorage.setItem('itzler_app_state', JSON.stringify(state));
   }, [state]);
+
+  useEffect(() => {
+    localStorage.setItem('itzler_active_tab', activeTab);
+  }, [activeTab]);
 
   const updateAnnualPlan = (annualPlan: AnnualPlan) => {
     setState(prev => ({ ...prev, annualPlan }));
@@ -61,7 +68,7 @@ const App: React.FC = () => {
   const togglePrepItem = (id: string) => {
     setState(prev => ({
       ...prev,
-      prepChecklist: prev.prepChecklist.map(item => 
+      prepChecklist: prev.prepChecklist.map(item =>
         item.id === id ? { ...item, completed: !item.completed } : item
       )
     }));

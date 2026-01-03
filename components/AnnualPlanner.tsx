@@ -85,6 +85,62 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
       </header>
 
       <section className="space-y-10">
+        <div className="flex items-center justify-between">
+          <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">The Anchor (Misogi)</h3>
+          <button
+            onClick={handleSuggestMisogi}
+            disabled={suggesting}
+            className="text-[10px] font-black text-white/50 uppercase tracking-widest hover:text-red-500 transition-colors"
+          >
+            {suggesting ? 'CONSULTING GEMINI...' : 'GENERATE AI SUGGESTION'}
+          </button>
+        </div>
+
+        <div className="bg-red-600 p-12 rounded-[2.5rem] shadow-2xl space-y-8 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+          </div>
+
+          <div className="space-y-6 relative">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">The Challenge</label>
+              <input
+                value={plan.misogi.title}
+                onChange={(e) => handleUpdate({ misogi: { ...plan.misogi, title: e.target.value } })}
+                placeholder="What is your 50/50 challenge?"
+                className="w-full bg-transparent border-none text-5xl font-black text-white uppercase italic placeholder:text-black/20 outline-none p-0 leading-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">The "Scare You" Factor</label>
+              <textarea
+                value={plan.misogi.description}
+                onChange={(e) => handleUpdate({ misogi: { ...plan.misogi, description: e.target.value } })}
+                placeholder="Every year needs one event where you have a 50% chance of failure."
+                className="w-full bg-transparent border-none text-lg font-bold text-white uppercase tracking-tight placeholder:text-black/20 outline-none p-0 resize-none h-24"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-4 pt-4">
+              {['planned', 'in-progress', 'completed'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => handleUpdate({ misogi: { ...plan.misogi, status: status as any } })}
+                  className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${plan.misogi.status === status
+                      ? 'bg-white text-red-600 shadow-xl scale-105'
+                      : 'bg-black/20 text-white/60 hover:bg-black/30'
+                    }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-10">
         <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">Big 4 Standards</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {CATEGORIES.map(cat => (
