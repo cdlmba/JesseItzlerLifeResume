@@ -23,7 +23,7 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
     if (!interests) return;
     setSuggesting(true);
     try {
-      const suggestion = await suggestMisogi(interests);
+      const suggestion = await suggestMisogi(interests, plan.theme);
       handleUpdate({
         misogi: { ...plan.misogi, title: suggestion.title, description: suggestion.description }
       });
@@ -53,10 +53,34 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
     <div className="space-y-16 max-w-4xl mx-auto animate-in slide-in-from-bottom-6 duration-700 pb-24">
       <header className="text-center space-y-8">
         <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">The Blueprint</h2>
-        <div className="group cursor-pointer text-center" onClick={() => setEditingTheme(true)}>
-          <p className="text-4xl font-black text-white italic uppercase tracking-tighter">
-            "{plan.theme || 'LIVING UNCOMMON'}"
-          </p>
+        <div className="group cursor-pointer text-center">
+          {editingTheme ? (
+            <div className="flex flex-col items-center gap-4">
+              <input
+                autoFocus
+                value={themeInput}
+                onChange={(e) => setThemeInput(e.target.value)}
+                onBlur={() => {
+                  handleUpdate({ theme: themeInput });
+                  setEditingTheme(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleUpdate({ theme: themeInput });
+                    setEditingTheme(false);
+                  }
+                }}
+                className="text-4xl font-black text-black bg-white px-6 py-2 uppercase italic tracking-tighter rounded-xl text-center"
+              />
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">PRESS ENTER TO LOCK IT IN</p>
+            </div>
+          ) : (
+            <div onClick={() => setEditingTheme(true)}>
+              <p className="text-4xl font-black text-white italic uppercase tracking-tighter group-hover:text-neutral-400 transition-colors">
+                "{plan.theme || 'LIVING UNCOMMON'}"
+              </p>
+            </div>
+          )}
         </div>
       </header>
 

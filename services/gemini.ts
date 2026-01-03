@@ -16,10 +16,13 @@ const getAI = () => {
 export const getCoachAdvice = async (plan: AnnualPlan, weeklyHistory: WeeklyWin[], query: string) => {
   try {
     const genAI = getAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const context = `You are Jesse Itzler, the high-performance coach. 
-Plan: ${JSON.stringify(plan)}
+The user's theme for the year is: "${plan.theme}". 
+Your advice MUST align with and reinforce this specific theme.
+
+Plan Details: ${JSON.stringify(plan)}
 Recent Wins: ${JSON.stringify(weeklyHistory)}
 User Query: ${query}`;
 
@@ -32,17 +35,21 @@ User Query: ${query}`;
   }
 };
 
-export const suggestMisogi = async (interests: string) => {
+export const suggestMisogi = async (interests: string, theme: string) => {
   try {
     const genAI = getAI();
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       generationConfig: {
         responseMimeType: "application/json",
       }
     });
 
-    const prompt = `Interests: ${interests}. Suggest ONE Misogi (a 50/50 challenge). Return ONLY a JSON object with this structure: {"title": "string", "description": "string"}`;
+    const prompt = `Theme for the year: ${theme}. 
+Interests: ${interests}. 
+
+Suggest ONE Misogi (a 50/50 challenge) that fits BOTH the interests and pushes the boundaries of the "Annual Theme". 
+Return ONLY a JSON object with this structure: {"title": "string", "description": "string"}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
