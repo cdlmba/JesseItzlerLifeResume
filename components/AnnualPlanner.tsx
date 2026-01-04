@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AnnualPlan, Goal, BigEvent } from '../types.ts';
 import { CATEGORIES } from '../constants.tsx';
-import { suggestMisogi } from '../services/gemini.ts';
+import { suggestMisogi, suggestKevinRule } from '../services/gemini.ts';
 
 interface AnnualPlannerProps {
   plan: AnnualPlan;
@@ -13,6 +13,7 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
   const [editingTheme, setEditingTheme] = useState(false);
   const [themeInput, setThemeInput] = useState(plan.theme);
   const [suggesting, setSuggesting] = useState(false);
+  const [suggestingKevin, setSuggestingKevin] = useState<number | null>(null);
 
   const handleUpdate = (updates: Partial<AnnualPlan>) => {
     onUpdate({ ...plan, ...updates });
@@ -46,6 +47,28 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
         completed: false
       };
       handleUpdate({ big4: [...plan.big4, newGoal] });
+    }
+  };
+
+  const handleSuggestKevinRule = async (index: number) => {
+    const interests = prompt("What are you interested in for this mini-challenge?");
+    if (!interests) return;
+    setSuggestingKevin(index);
+    try {
+      const suggestion = await suggestKevinRule(interests, plan.theme);
+      const newEvents = [...plan.kevinRuleEvents];
+      const event: BigEvent = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: suggestion.title,
+        description: suggestion.description,
+        date: new Date(new Date().getFullYear(), (index * 2) + 1, 1).toISOString(),
+      };
+      newEvents[index] = event;
+      handleUpdate({ kevinRuleEvents: newEvents });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSuggestingKevin(null);
     }
   };
 
@@ -128,8 +151,8 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
                   key={status}
                   onClick={() => handleUpdate({ misogi: { ...plan.misogi, status: status as any } })}
                   className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${plan.misogi.status === status
-                      ? 'bg-white text-red-600 shadow-xl scale-105'
-                      : 'bg-black/20 text-white/60 hover:bg-black/30'
+                    ? 'bg-white text-red-600 shadow-xl scale-105'
+                    : 'bg-black/20 text-white/60 hover:bg-black/30'
                     }`}
                 >
                   {status}
@@ -137,6 +160,59 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-10">
+        <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">The 8-Week Clock (Kevin's Rule)</h3>
+        <p className="text-neutral-500 text-[10px] font-black uppercase tracking-widest -mt-6">ONE CHALLENGE EVERY 8 WEEKS. NO EXCUSES.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(6)].map((_, i) => {
+            const event = plan.kevinRuleEvents[i];
+            return (
+              <div key={i} className={`glass-panel p-8 rounded-[2rem] border-2 transition-all ${event ? 'border-red-600/30 bg-neutral-900' : 'border-white/5 bg-black'}`}>
+                <div className="flex justify-between items-start mb-6">
+                  <span className="bg-white/5 text-[10px] font-black px-4 py-2 rounded-lg uppercase tracking-widest">SLOT 0{i + 1}</span>
+                  <button
+                    onClick={() => handleSuggestKevinRule(i)}
+                    disabled={suggestingKevin === i}
+                    className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:text-white transition-colors"
+                  >
+                    {suggestingKevin === i ? 'AI PLANNING...' : 'AI SUGGEST'}
+                  </button>
+                </div>
+
+                {event ? (
+                  <div className="space-y-4">
+                    <input
+                      value={event.title}
+                      onChange={(e) => {
+                        const newEvents = [...plan.kevinRuleEvents];
+                        newEvents[i] = { ...event, title: e.target.value };
+                        handleUpdate({ kevinRuleEvents: newEvents });
+                      }}
+                      className="w-full bg-transparent border-none text-xl font-black text-white uppercase italic placeholder:text-neutral-800 outline-none p-0"
+                    />
+                    <textarea
+                      value={event.description}
+                      onChange={(e) => {
+                        const newEvents = [...plan.kevinRuleEvents];
+                        newEvents[i] = { ...event, description: e.target.value };
+                        handleUpdate({ kevinRuleEvents: newEvents });
+                      }}
+                      className="w-full bg-transparent border-none text-xs font-bold text-neutral-400 uppercase tracking-tight placeholder:text-neutral-800 outline-none p-0 resize-none h-12"
+                    />
+                  </div>
+                ) : (
+                  <div className="opacity-20 py-4">
+                    <p className="text-sm font-black uppercase italic">Unscheduled experience</p>
+                    <p className="text-[10px] uppercase font-bold text-neutral-600">Click AI Suggest to fill</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
