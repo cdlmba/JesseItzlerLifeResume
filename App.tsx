@@ -6,6 +6,8 @@ import AnnualPlanner from './components/AnnualPlanner.tsx';
 import WeeklyWinComponent from './components/WeeklyWin.tsx';
 import AICoach from './components/AICoach.tsx';
 import YearPrep from './components/YearPrep.tsx';
+import Onboarding from './components/Onboarding.tsx';
+import BigACalendar from './components/BigACalendar.tsx';
 import { AppState, AnnualPlan, WeeklyWin, PrepItem } from './types.ts';
 
 const DEFAULT_PREP: PrepItem[] = [
@@ -30,17 +32,25 @@ const INITIAL_PLAN: AnnualPlan = {
     status: 'planned'
   },
   big4: [],
-  kevinRuleEvents: []
+  kevinRuleEvents: [],
+  nonNegotiableDates: []
 };
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem('itzler_app_state');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migration: ensure new fields exist
+      if (!parsed.annualPlan.nonNegotiableDates) parsed.annualPlan.nonNegotiableDates = [];
+      if (parsed.onboardingComplete === undefined) parsed.onboardingComplete = false;
+      return parsed;
+    }
     return {
       annualPlan: INITIAL_PLAN,
       weeklyWins: [],
-      prepChecklist: DEFAULT_PREP
+      prepChecklist: DEFAULT_PREP,
+      onboardingComplete: false
     };
   });
 
@@ -74,12 +84,22 @@ const App: React.FC = () => {
     }));
   };
 
+  const completeOnboarding = (annualPlan: AnnualPlan) => {
+    setState(prev => ({ ...prev, annualPlan, onboardingComplete: true }));
+    setActiveTab('calendar');
+  };
+
+  if (!state.onboardingComplete) {
+    return <Onboarding onComplete={completeOnboarding} />;
+  }
+
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
       {activeTab === 'dashboard' && <Dashboard state={state} />}
+      {activeTab === 'calendar' && <BigACalendar state={state} onUpdate={updateAnnualPlan} />}
       {activeTab === 'prep' && <YearPrep checklist={state.prepChecklist} onToggle={togglePrepItem} />}
       {activeTab === 'annual' && <AnnualPlanner plan={state.annualPlan} onUpdate={updateAnnualPlan} />}
-      {activeTab === 'weekly' && <WeeklyWinComponent onSave={addWeeklyWin} />}
+      {activeTab === 'weekly' && <WeeklyWinComponent annualPlan={state.annualPlan} onSave={addWeeklyWin} />}
       {activeTab === 'coach' && <AICoach state={state} />}
     </Layout>
   );

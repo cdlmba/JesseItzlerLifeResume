@@ -9,7 +9,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ state }) => {
   const { annualPlan, weeklyWins } = state;
   const lastWeeklyScore = weeklyWins.length > 0 ? weeklyWins[0].score : 0;
-  
+
   const currentMonth = new Date().getMonth();
   const yearProgress = Math.round(((currentMonth + 1) / 12) * 100);
 
@@ -29,7 +29,7 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
             </div>
             <div className="bg-red-600 text-white px-6 py-4 rounded-xl">
               <span className="block text-[10px] font-black uppercase tracking-widest opacity-70">Weekly Win Rate</span>
-              <span className="text-3xl font-black">{lastWeeklyScore}/10</span>
+              <span className="text-3xl font-black">{lastWeeklyScore}%</span>
             </div>
           </div>
         </div>
@@ -49,9 +49,19 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
                 <div key={i} className={`p-6 rounded-2xl border ${event ? 'border-red-600/50 bg-neutral-900' : 'border-white/5 bg-black'} group transition-all hover:border-white/20`}>
                   <div className="flex justify-between items-start mb-4">
                     <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[10px] font-black group-hover:bg-red-600 group-hover:text-white transition-colors">
-                      Q{Math.ceil((i+1)/1.5)}
+                      Q{Math.ceil((i + 1) / 1.5)}
                     </span>
-                    {event && <span className="text-[10px] font-bold text-neutral-500">{new Date(event.date).toLocaleDateString()}</span>}
+                    {event && (
+                      <span className="text-[10px] font-bold text-neutral-500">
+                        {(() => {
+                          const idxStr = event.date?.split(',')[0];
+                          if (!idxStr) return '';
+                          const idx = Number(idxStr);
+                          const date = new Date(annualPlan.year, 0, 1 + idx);
+                          return date.toLocaleDateString();
+                        })()}
+                      </span>
+                    )}
                   </div>
                   {event ? (
                     <div>
@@ -74,23 +84,23 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
         <div className="space-y-6">
           <h3 className="text-2xl font-black italic uppercase">The Anchor</h3>
           <div className="bg-red-600 p-8 rounded-3xl h-full flex flex-col justify-between shadow-2xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-4 opacity-10">
-               <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-             </div>
-             <div>
-               <h4 className="text-4xl font-black uppercase italic leading-none mb-4">
-                 {annualPlan.misogi.title || "No Anchor Set"}
-               </h4>
-               <p className="text-xs font-bold uppercase tracking-tight opacity-80 leading-relaxed">
-                 {annualPlan.misogi.description || "Every year needs one event where you have a 50% chance of failure."}
-               </p>
-             </div>
-             <div className="mt-8">
-                <div className="w-full bg-black/20 h-2 rounded-full mb-2">
-                   <div className={`h-full bg-white rounded-full ${annualPlan.misogi.status === 'completed' ? 'w-full' : 'w-1/4'}`}></div>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest">Status: {annualPlan.misogi.status}</span>
-             </div>
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+            </div>
+            <div>
+              <h4 className="text-4xl font-black uppercase italic leading-none mb-4">
+                {annualPlan.misogi.title || "No Anchor Set"}
+              </h4>
+              <p className="text-xs font-bold uppercase tracking-tight opacity-80 leading-relaxed">
+                {annualPlan.misogi.description || "Every year needs one event where you have a 50% chance of failure."}
+              </p>
+            </div>
+            <div className="mt-8">
+              <div className="w-full bg-black/20 h-2 rounded-full mb-2">
+                <div className={`h-full bg-white rounded-full ${annualPlan.misogi.status === 'completed' ? 'w-full' : 'w-1/4'}`}></div>
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest">Status: {annualPlan.misogi.status}</span>
+            </div>
           </div>
         </div>
       </div>

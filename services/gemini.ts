@@ -28,6 +28,12 @@ CORE PHILOSOPHY:
 3. MEMORY ANCHORS: Kevin's Rule (one experience every 8 weeks) and Misogi (one 50/50 challenge/year) are the antidotes. They "stretch" time by creating distinct milestones.
 4. NO NEGOTIATION: Once it's on the calendar, the debate is over.
 
+FORMATTING:
+- Use **Markdown** to make labels and key points stand out.
+- Use # or ## for emphasis sparingly, mostly use ### for sections.
+- Use bullet points for action items.
+- BE AGGRESSIVE AND MOTIVATIONAL.
+
 Plan Details: ${JSON.stringify(plan)}
 Recent Wins: ${JSON.stringify(weeklyHistory)}
 User Query: ${query}`;
@@ -79,17 +85,20 @@ export const suggestKevinRule = async (interests: string, theme: string) => {
     const prompt = `Theme for the year: ${theme}. 
 Interests: ${interests}. 
 
-PHILOSOPHY: Suggest ONE "Kevin's Rule" event. This is a "mini-adventure" or "memory anchor" to prevent "Life Compression" (the blur of routine). 
-The goal is to stretch time by inserting a unique story into the 8-week block.
+PHILOSOPHY: Suggest ONE "Kevin's Rule" event. This is a "mini-adventure" or "memory anchor" designed to prevent "Life Compression" (the blur of routine). 
+The goal is to stretch time by inserting a unique, out-of-the-ordinary story into this 8-week block.
 
-EXPERIENCE CATEGORIES (Randomly pick one style for variety):
-- Low/No Cost: City tourist days, backyard camping, 24hr digital detox.
-- Mid-Range: Road trip to a new town, niche workshops (archery, glass-blowing), weird theater.
-- High-End: Helicopter tours, spa retreats, flying to a major sporting event.
+EXPERIENCE CATEGORIES (Randomly pick one style for this suggestion):
+1. Low / No Cost: A "city tourist" day, backyard winter camping, or a 24-hour digital detox in a state park.
+2. Mid-Range: Weekend road trip to a town never visited, niche theater show, or a day-long professional skills workshop (e.g., archery or glass-blowing).
+3. High-End: Helicopter tour, luxury spa retreat, or a weekend flight to a major city for a specific event.
 
-The suggestion should be significant enough to stand out in a memory, but smaller than a full year-defining Misogi.
+CRITERIA:
+- Must be significant enough to stand out in memory.
+- Must NOT be something the user would normally do in daily life.
+- Doesn't have to be physically grueling (unlike a Misogi), just unique.
 
-Return ONLY a JSON object: {"title": "string", "description": "string"}`;
+Return ONLY a JSON object: {"title": "Title of Adventure", "description": "Brief Plan: 1. [Step 1] 2. [Step 2] 3. [Outcome]"}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

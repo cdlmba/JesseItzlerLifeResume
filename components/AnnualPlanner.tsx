@@ -14,6 +14,8 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
   const [themeInput, setThemeInput] = useState(plan.theme);
   const [suggesting, setSuggesting] = useState(false);
   const [suggestingKevin, setSuggestingKevin] = useState<number | null>(null);
+  const [showKevinLogic, setShowKevinLogic] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
 
   const handleUpdate = (updates: Partial<AnnualPlan>) => {
     onUpdate({ ...plan, ...updates });
@@ -164,50 +166,153 @@ const AnnualPlanner: React.FC<AnnualPlannerProps> = ({ plan, onUpdate }) => {
       </section>
 
       <section className="space-y-10">
-        <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">The 8-Week Clock (Kevin's Rule)</h3>
-        <p className="text-neutral-500 text-[10px] font-black uppercase tracking-widest -mt-6">ONE CHALLENGE EVERY 8 WEEKS. NO EXCUSES.</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-2">
+            <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">The 8-Week Clock (Kevin's Rule)</h3>
+            <p className="text-neutral-500 text-[10px] font-black uppercase tracking-widest">ONE CHALLENGE EVERY 8 WEEKS. NO EXCUSES.</p>
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowKevinLogic(!showKevinLogic)}
+              className="text-[10px] font-black text-white/40 uppercase tracking-widest hover:text-white transition-colors"
+            >
+              {showKevinLogic ? '[ HIDE LOGIC ]' : '[ WHY 8 WEEKS? ]'}
+            </button>
+            <button
+              onClick={() => setShowExamples(!showExamples)}
+              className="px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all rounded-lg"
+            >
+              IDEAS / EXAMPLES
+            </button>
+          </div>
+        </div>
+
+        {showKevinLogic && (
+          <div className="bg-neutral-900 border border-white/5 p-8 rounded-[2rem] animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-4">
+                <h4 className="text-red-500 font-black uppercase tracking-widest text-xs">The Problem: Life Compression</h4>
+                <p className="text-sm text-neutral-400 leading-relaxed">
+                  When you fall into a strict routine, your brain stops recording new, distinct memories. Time appears to move faster.
+                  Years blur into a single line of work and errands.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-red-500 font-black uppercase tracking-widest text-xs">The Antidote: Memory Anchors</h4>
+                <p className="text-sm text-neutral-400 leading-relaxed">
+                  By inserting six "Kevin’s Rule" events annually, you effectively "stretch" time. These are the milestones
+                  that allow you to look back and see a rich tapestry of experiences rather than a blur.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showExamples && (
+          <div className="bg-white p-8 rounded-[2rem] animate-in fade-in zoom-in-95 duration-500">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-black font-black uppercase tracking-tighter text-2xl italic">Experience Brainstorming</h4>
+              <button onClick={() => setShowExamples(false)} className="text-black/40 hover:text-black font-black uppercase text-[10px] tracking-widest">CLOSE</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-4">
+                <div className="bg-black/5 p-4 rounded-2xl">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-2">Low / No Cost</p>
+                  <ul className="text-xs font-bold text-black/60 space-y-2 uppercase leading-tight">
+                    <li>• City tourist day (museums)</li>
+                    <li>• Backyard winter camping</li>
+                    <li>• 24hr digital detox in a park</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-black/5 p-4 rounded-2xl">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-2 text-red-600">Mid-Range</p>
+                  <ul className="text-xs font-bold text-black/60 space-y-2 uppercase leading-tight">
+                    <li>• Weekend road trip to new town</li>
+                    <li>• Niche theater show</li>
+                    <li>• Day-long skills workshop</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-black/5 p-4 rounded-2xl">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-2 text-red-600">High-End</p>
+                  <ul className="text-xs font-bold text-black/60 space-y-2 uppercase leading-tight">
+                    <li>• Helicopter tour of region</li>
+                    <li>• Luxury spa retreat</li>
+                    <li>• Flight to a major event</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[...Array(6)].map((_, i) => {
             const event = plan.kevinRuleEvents[i];
             return (
-              <div key={i} className={`glass-panel p-8 rounded-[2rem] border-2 transition-all ${event ? 'border-red-600/30 bg-neutral-900' : 'border-white/5 bg-black'}`}>
-                <div className="flex justify-between items-start mb-6">
-                  <span className="bg-white/5 text-[10px] font-black px-4 py-2 rounded-lg uppercase tracking-widest">SLOT 0{i + 1}</span>
+              <div key={i} className={`group relative glass-panel p-8 rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${event
+                ? 'border-white/20 bg-gradient-to-br from-neutral-900 to-black hover:border-red-600/50'
+                : 'border-white/5 bg-black hover:border-white/10'}`}>
+
+                <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none">
+                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                </div>
+
+                <div className="flex justify-between items-start mb-8">
+                  <div className="space-y-1">
+                    <span className="bg-red-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">EVENT 0{i + 1}</span>
+                    <p className="text-[9px] font-bold text-neutral-600 uppercase tracking-[0.2em] px-1">Block: {i * 8}-{(i + 1) * 8} Weeks</p>
+                  </div>
                   <button
                     onClick={() => handleSuggestKevinRule(i)}
                     disabled={suggestingKevin === i}
-                    className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:text-white transition-colors"
+                    className="text-[10px] font-black text-neutral-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2"
                   >
-                    {suggestingKevin === i ? 'AI PLANNING...' : 'AI SUGGEST'}
+                    {suggestingKevin === i ? (
+                      <>
+                        <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                        AI PLANNING...
+                      </>
+                    ) : 'AI ASSIST'}
                   </button>
                 </div>
 
                 {event ? (
-                  <div className="space-y-4">
-                    <input
-                      value={event.title}
-                      onChange={(e) => {
-                        const newEvents = [...plan.kevinRuleEvents];
-                        newEvents[i] = { ...event, title: e.target.value };
-                        handleUpdate({ kevinRuleEvents: newEvents });
-                      }}
-                      className="w-full bg-transparent border-none text-xl font-black text-white uppercase italic placeholder:text-neutral-800 outline-none p-0"
-                    />
-                    <textarea
-                      value={event.description}
-                      onChange={(e) => {
-                        const newEvents = [...plan.kevinRuleEvents];
-                        newEvents[i] = { ...event, description: e.target.value };
-                        handleUpdate({ kevinRuleEvents: newEvents });
-                      }}
-                      className="w-full bg-transparent border-none text-xs font-bold text-neutral-400 uppercase tracking-tight placeholder:text-neutral-800 outline-none p-0 resize-none h-12"
-                    />
+                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">The Experience</label>
+                      <input
+                        value={event.title}
+                        onChange={(e) => {
+                          const newEvents = [...plan.kevinRuleEvents];
+                          newEvents[i] = { ...event, title: e.target.value };
+                          handleUpdate({ kevinRuleEvents: newEvents });
+                        }}
+                        placeholder="What's the memory anchor?"
+                        className="w-full bg-transparent border-none text-2xl font-black text-white uppercase italic placeholder:text-neutral-800 outline-none p-0 leading-tight"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">Detail & Adventure</label>
+                      <textarea
+                        value={event.description}
+                        onChange={(e) => {
+                          const newEvents = [...plan.kevinRuleEvents];
+                          newEvents[i] = { ...event, description: e.target.value };
+                          handleUpdate({ kevinRuleEvents: newEvents });
+                        }}
+                        placeholder="Why is this significant? How does it break your routine?"
+                        className="w-full bg-transparent border-none text-sm font-bold text-neutral-400 uppercase tracking-tight placeholder:text-neutral-800 outline-none p-0 resize-none h-16 leading-relaxed"
+                      />
+                    </div>
                   </div>
                 ) : (
-                  <div className="opacity-20 py-4">
-                    <p className="text-sm font-black uppercase italic">Unscheduled experience</p>
-                    <p className="text-[10px] uppercase font-bold text-neutral-600">Click AI Suggest to fill</p>
+                  <div className="opacity-20 py-8 text-center space-y-2 group-hover:opacity-40 transition-opacity">
+                    <p className="text-xl font-black uppercase italic tracking-tighter">UNSCHEDULED ANCHOR</p>
+                    <p className="text-[10px] uppercase font-bold text-neutral-600 tracking-widest">Fill to prevent life compression</p>
                   </div>
                 )}
               </div>

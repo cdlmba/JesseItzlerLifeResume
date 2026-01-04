@@ -3,12 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppState } from '../types.ts';
 import { getCoachAdvice } from '../services/gemini.ts';
 
+import ReactMarkdown from 'react-markdown';
+
 interface AICoachProps {
   state: AppState;
 }
 
 const AICoach: React.FC<AICoachProps> = ({ state }) => {
-  const [messages, setMessages] = useState<{role: 'user' | 'coach', content: string}[]>([
+  const [messages, setMessages] = useState<{ role: 'user' | 'coach', content: string }[]>([
     { role: 'coach', content: "I'm your performance coach. The clock is ticking. What's the block?" }
   ]);
   const [input, setInput] = useState('');
@@ -35,11 +37,28 @@ const AICoach: React.FC<AICoachProps> = ({ state }) => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-10 space-y-6">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[75%] px-8 py-6 rounded-[2rem] text-sm font-bold ${m.role === 'user' ? 'bg-red-600 text-white' : 'bg-neutral-900 text-neutral-200'}`}>
-              {m.content}
+            <div className={`max-w-[85%] px-8 py-6 rounded-[2rem] text-sm font-bold leading-relaxed ${m.role === 'user'
+              ? 'bg-red-600 text-white'
+              : 'bg-neutral-900 text-neutral-200'}`}>
+              {m.role === 'coach' ? (
+                <div className="prose prose-invert prose-p:leading-relaxed prose-headings:mb-2 prose-headings:mt-4 prose-headings:text-white prose-ul:list-disc prose-li:ml-4">
+                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                </div>
+              ) : (
+                m.content
+              )}
             </div>
           </div>
         ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-neutral-900 px-8 py-4 rounded-full flex gap-2 items-center">
+              <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce" />
+              <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce [animation-delay:0.2s]" />
+              <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce [animation-delay:0.4s]" />
+            </div>
+          </div>
+        )}
       </div>
       <div className="p-8 bg-black border-t border-white/5 flex gap-4">
         <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} className="flex-1 bg-neutral-900 border-2 border-neutral-800 rounded-2xl px-6 py-4 text-white font-bold" />

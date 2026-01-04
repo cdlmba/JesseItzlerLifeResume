@@ -27,14 +27,16 @@ export interface AnnualPlan {
   misogi: Misogi;
   big4: Goal[];
   kevinRuleEvents: BigEvent[]; // 6 events, one every 8 weeks
+  nonNegotiableDates: string[]; // ISO string dates
 }
 
 export interface WeeklyWin {
   id: string;
   weekStart: string;
-  nonNegotiables: string[];
+  big4Wins: { category: string; task: string; completed: boolean }[];
   reflections: string;
-  score: number; // 1-10
+  score: number; // 0-100% based on wins
+  status: 'planned' | 'completed';
 }
 
 export interface PrepItem {
@@ -48,4 +50,5 @@ export interface AppState {
   annualPlan: AnnualPlan;
   weeklyWins: WeeklyWin[];
   prepChecklist: PrepItem[];
+  onboardingComplete: boolean;
 }

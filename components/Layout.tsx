@@ -10,6 +10,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'calendar', label: 'Big A## Calendar', icon: '📅' },
     { id: 'prep', label: 'Prep', icon: '📝' },
     { id: 'annual', label: 'Annual Plan', icon: '📅' },
     { id: 'weekly', label: 'Weekly Win', icon: '⚡' },
@@ -32,9 +33,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
-                activeTab === tab.id ? 'text-red-600 border-b-2 border-red-600 pb-1' : 'text-slate-500 hover:text-white'
-              }`}
+              className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === tab.id ? 'text-red-600 border-b-2 border-red-600 pb-1' : 'text-slate-500 hover:text-white'
+                }`}
             >
               {tab.label}
             </button>
@@ -51,9 +51,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              activeTab === tab.id ? 'text-red-500' : 'text-slate-600'
-            }`}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === tab.id ? 'text-red-500' : 'text-slate-600'
+              }`}
           >
             <span className="text-xl">{tab.icon}</span>
             <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>

@@ -1,127 +1,172 @@
 
 import React, { useState } from 'react';
-import { WeeklyWin } from '../types.ts';
+import { WeeklyWin, AnnualPlan, Goal } from '../types.ts';
+import { CATEGORIES } from '../constants.tsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface WeeklyWinProps {
+  annualPlan: AnnualPlan;
   onSave: (win: WeeklyWin) => void;
 }
 
-const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ onSave }) => {
-  const [nonNeg, setNonNeg] = useState<string[]>(['The First 60 Protocol (Daily)', 'Big 4: 45m Sweat', 'Relationship: One Meaningful Connect']);
+const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ annualPlan, onSave }) => {
+  const [mode, setMode] = useState<'planning' | 'reviewing'>('planning');
+
+  // State for the specific weekly tasks associated with each Big 4 Category
+  const [tasks, setTasks] = useState<Record<string, string>>({
+    'Health': '', 'Wealth': '', 'Relationship': '', 'Self': ''
+  });
+
+  // State for tracking completion in Review mode
+  const [completed, setCompleted] = useState<Record<string, boolean>>({
+    'Health': false, 'Wealth': false, 'Relationship': false, 'Self': false
+  });
+
   const [reflection, setReflection] = useState('');
-  const [score, setScore] = useState(7);
-  const [effort, setEffort] = useState(7); 
+
+  // Calculate score based on completion count
+  const completedCount = Object.values(completed).filter(c => c).length;
+  const score = Math.round((completedCount / 4) * 100);
 
   const handleSave = () => {
+    const big4Wins = CATEGORIES.map(cat => ({
+      category: cat,
+      task: tasks[cat] || '',
+      completed: completed[cat] || false
+    }));
+
     onSave({
       id: Math.random().toString(36).substr(2, 9),
       weekStart: new Date().toLocaleDateString(),
-      nonNegotiables: nonNeg.filter(n => n.trim() !== ''),
+      big4Wins,
       reflections: reflection,
-      score: Math.round((score + effort) / 2) 
+      score: score,
+      status: mode === 'planning' ? 'planned' : 'completed'
     });
-    setNonNeg(['The First 60 Protocol (Daily)', 'Big 4: 45m Sweat', 'Relationship: One Meaningful Connect']);
-    setReflection('');
-    setScore(7);
-    setEffort(7);
+
+    // Reset or navigate away? For now just alert or simple reset
+    if (mode === 'reviewing') {
+      alert(`Week Recorded! Score: ${score}%`);
+      // Reset for next week
+      setMode('planning');
+      setTasks({ 'Health': '', 'Wealth': '', 'Relationship': '', 'Self': '' });
+      setCompleted({ 'Health': false, 'Wealth': false, 'Relationship': false, 'Self': false });
+      setReflection('');
+    }
+  };
+
+  // Helper to find the main annual goal for a category
+  const getAnnualGoal = (cat: string) => {
+    return annualPlan.big4.find(g => g.category === cat)?.title || "No Annual Goal Set";
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-12 animate-in slide-in-from-right-6 duration-700 pb-32">
-      <header className="text-center">
-        <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">SEAL THE WIN</h2>
-        <p className="text-neutral-600 text-[10px] font-black uppercase tracking-[0.4em] mt-4">"Don't negotiate with your goals."</p>
+    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-right-6 duration-700 pb-32">
+      <header className="flex justify-between items-end border-b border-white/10 pb-6">
+        <div>
+          <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
+            {mode === 'planning' ? 'Design The Week' : 'Win The Week'}
+          </h2>
+          <p className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2">
+            {mode === 'planning' ? 'Set the intention. One step per goal.' : 'Binary Scoring. Did you execute?'}
+          </p>
+        </div>
+        <div className="flex bg-black/40 p-1 rounded-xl border border-white/10">
+          <button
+            onClick={() => setMode('planning')}
+            className={`px-6 py-3 rounded-lg text-[10px] font-black uppercase transition-all tracking-widest ${mode === 'planning' ? 'bg-white text-black shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+          >
+            1. Plan
+          </button>
+          <button
+            onClick={() => setMode('reviewing')}
+            className={`px-6 py-3 rounded-lg text-[10px] font-black uppercase transition-all tracking-widest ${mode === 'reviewing' ? 'bg-white text-black shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+          >
+            2. Review
+          </button>
+        </div>
       </header>
 
-      <div className="glass-panel p-10 rounded-[2.5rem] space-y-12 relative overflow-hidden border-2 border-white/5">
-        {/* Morning Protocol Focus */}
-        <div className="bg-red-600 p-8 rounded-3xl relative group shadow-2xl overflow-hidden">
-           <div className="absolute -top-3 -right-3 bg-black text-[10px] font-black text-white px-6 py-2 rounded-full shadow-2xl uppercase tracking-widest border border-white/10">PROTOCOL V0.1</div>
-           <div className="flex items-center gap-6">
-             <div className="text-5xl">🌅</div>
-             <div>
-               <h4 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-1">Win the First 60</h4>
-               <p className="text-[11px] text-black font-black uppercase italic leading-tight">No Phone • Hydration • Outdoor Light</p>
-             </div>
-           </div>
-        </div>
-
-        {/* Non-Negotiables */}
-        <div className="space-y-6">
-          <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">The Standards</label>
-          <div className="space-y-4">
-            {nonNeg.map((val, idx) => (
-              <div key={idx} className="flex gap-4 items-center group">
-                <div className="w-12 h-12 rounded-2xl bg-black border border-white/10 flex items-center justify-center text-sm font-black text-red-600 transition-all group-focus-within:border-red-600">
-                  {idx + 1}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {CATEGORIES.map((cat, idx) => (
+          <motion.div
+            key={cat}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className={`glass-panel p-6 rounded-[2rem] border-l-[6px] relative overflow-hidden group transition-all ${mode === 'reviewing' && completed[cat] ? 'border-green-500 bg-green-900/10' : 'border-white/20'
+              }`}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">{cat}</span>
+              {mode === 'reviewing' && (
+                <div
+                  onClick={() => setCompleted({ ...completed, [cat]: !completed[cat] })}
+                  className={`w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all ${completed[cat] ? 'bg-green-500 border-green-500 text-black' : 'border-white/20 hover:border-white'
+                    }`}
+                >
+                  {completed[cat] && <span className="font-bold">✓</span>}
                 </div>
-                <input 
-                  value={val}
-                  onChange={(e) => {
-                    const copy = [...nonNeg];
-                    copy[idx] = e.target.value;
-                    setNonNeg(copy);
-                  }}
-                  className="flex-1 bg-black border border-white/5 rounded-2xl px-6 py-4 text-white text-sm font-black focus:border-red-600 outline-none transition-all uppercase tracking-tight placeholder:text-neutral-800"
-                  placeholder="SET STANDARD..."
+              )}
+            </div>
+
+            <div className="mb-6">
+              <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-wide mb-1">Annual Standard</p>
+              <p className="text-lg font-black text-white uppercase italic leading-none opacity-80">
+                "{getAnnualGoal(cat)}"
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className={`text-[9px] font-black uppercase tracking-wide transition-colors ${mode === 'reviewing' ? 'text-neutral-500' : 'text-red-500'}`}>
+                {mode === 'planning' ? 'Micro-Win For This Week' : 'The Commitment'}
+              </label>
+              {mode === 'planning' ? (
+                <input
+                  value={tasks[cat]}
+                  onChange={(e) => setTasks({ ...tasks, [cat]: e.target.value })}
+                  placeholder={`What is one actionable step for ${cat}?`}
+                  className="w-full bg-black/30 border-b border-white/10 px-0 py-2 text-sm font-bold text-white placeholder:text-neutral-700 outline-none focus:border-red-600 transition-colors"
                 />
-              </div>
-            ))}
-            <button 
-              onClick={() => setNonNeg([...nonNeg, ''])}
-              className="text-[10px] font-black text-white uppercase tracking-[0.2em] hover:text-red-500 transition-colors pl-16"
-            >
-              + ADD ANOTHER STANDARD
-            </button>
-          </div>
-        </div>
-
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
-          <div className="space-y-6">
-            <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">Execution (1-10)</label>
-            <div className="flex items-center gap-6">
-              <input 
-                type="range" min="1" max="10" step="1"
-                value={score}
-                onChange={(e) => setScore(parseInt(e.target.value))}
-                className="flex-1 accent-red-600 h-2 bg-black rounded-full appearance-none cursor-pointer"
-              />
-              <span className="text-4xl font-black text-white w-10 text-center">{score}</span>
+              ) : (
+                <p className={`text-md font-bold ${tasks[cat] ? 'text-white' : 'text-neutral-600 italic'}`}>
+                  {tasks[cat] || "No task set."}
+                </p>
+              )}
             </div>
-          </div>
-          <div className="space-y-6">
-            <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">BROWN BAGGING EFFORT</label>
-            <div className="flex items-center gap-6">
-              <input 
-                type="range" min="1" max="10" step="1"
-                value={effort}
-                onChange={(e) => setEffort(parseInt(e.target.value))}
-                className="flex-1 accent-white h-2 bg-black rounded-full appearance-none cursor-pointer"
-              />
-              <span className="text-4xl font-black text-red-600 w-10 text-center">{effort}</span>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="glass-panel p-8 rounded-[2rem] border border-white/5 space-y-4">
+        <div className="flex justify-between items-center">
+          <label className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">Weekly Reflection</label>
+          {mode === 'reviewing' && (
+            <div className="px-4 py-1 bg-white/10 rounded-full text-[10px] font-bold text-white uppercase tracking-widest">
+              Weekly Score: <span className={score >= 75 ? 'text-green-400' : score >= 50 ? 'text-yellow-400' : 'text-red-500'}>{score}%</span>
             </div>
-          </div>
+          )}
         </div>
+        <textarea
+          value={reflection}
+          onChange={(e) => setReflection(e.target.value)}
+          placeholder={mode === 'planning' ? "Any anticipated obstacles? How will you overcome them?" : "What went well? What didn't? Be honest."}
+          className="w-full bg-black/20 rounded-2xl p-4 text-sm font-medium text-white placeholder:text-neutral-700 outline-none h-24 resize-none"
+        />
+      </div>
 
-        {/* Reflection */}
-        <div className="space-y-6">
-          <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">Life Resume Log</label>
-          <textarea 
-            value={reflection}
-            onChange={(e) => setReflection(e.target.value)}
-            placeholder="Did you build memories? Did you win the morning?"
-            className="w-full bg-black border border-white/5 rounded-3xl px-8 py-6 text-white text-sm font-bold focus:border-red-600 outline-none h-40 resize-none placeholder:text-neutral-800 italic"
-          />
-        </div>
-
-        <button 
+      <div className="flex justify-center">
+        <button
           onClick={handleSave}
-          className="w-full py-6 bg-white rounded-3xl font-black text-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:bg-red-600 hover:text-white transition-all active:scale-[0.98]"
+          className={`px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all hover:scale-105 shadow-2xl ${mode === 'planning'
+              ? 'bg-white text-black hover:bg-neutral-200'
+              : 'bg-green-600 text-white hover:bg-green-500'
+            }`}
         >
-          SUBMIT ENTRY
+          {mode === 'planning' ? 'Lock In The Plan' : 'Submit Weekly Review'}
         </button>
       </div>
+
     </div>
   );
 };
