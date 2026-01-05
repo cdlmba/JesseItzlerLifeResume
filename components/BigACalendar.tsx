@@ -1,17 +1,53 @@
 
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { AppState } from '../types.ts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AppState, AnnualPlan, BigEvent } from '../types.ts';
+import { suggestKevinRule } from '../services/gemini.ts';
 
 interface BigACalendarProps {
     state: AppState;
 }
 
-const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: any) => void }> = ({ state, onUpdate }) => {
+const getWeekNumber = (date: Date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+};
+
+const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: AnnualPlan) => void }> = ({ state, onUpdate }) => {
     const { annualPlan } = state;
     const currentYear = annualPlan.year;
     const [editMode, setEditMode] = React.useState(false);
     const [selectedType, setSelectedType] = React.useState<'none' | 'misogi' | 'kevin' | 'foundation'>('none');
+    const [selectedKevinIdx, setSelectedKevinIdx] = React.useState<number | null>(null);
+    const [suggestingKevin, setSuggestingKevin] = React.useState<number | null>(null);
+    const [interestInput, setInterestInput] = React.useState("");
+
+    const handleUpdateEvent = (idx: number, updates: Partial<BigEvent>) => {
+        if (!onUpdate) return;
+        const newEvents = [...annualPlan.kevinRuleEvents];
+        newEvents[idx] = { ...newEvents[idx], ...updates } as BigEvent;
+        onUpdate({ ...annualPlan, kevinRuleEvents: newEvents });
+    };
+
+    const handleAiSuggest = async (idx: number) => {
+        setSuggestingKevin(idx);
+        try {
+            const suggestion = await suggestKevinRule(interestInput || "Unique Experience", annualPlan.theme);
+            if (suggestion && suggestion.title) {
+                handleUpdateEvent(idx, {
+                    title: suggestion.title,
+                    description: suggestion.description
+                });
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSuggestingKevin(null);
+        }
+    };
 
     const handleDateClick = (dateIndex: number) => {
         if (!editMode || !onUpdate) return;
@@ -19,8 +55,7 @@ const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: any) => voi
         const dateStr = String(dateIndex);
         const newPlan = { ...annualPlan };
 
-        // Helper to remove date from All lists
-        const clearDate = (d: string) => {
+        const clearDateFlags = (d: string) => {
             if (newPlan.misogi.date === d) newPlan.misogi.date = "";
             newPlan.nonNegotiableDates = newPlan.nonNegotiableDates.filter(x => x !== d);
             newPlan.kevinRuleEvents = newPlan.kevinRuleEvents.map(e => {
@@ -30,30 +65,23 @@ const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: any) => voi
             });
         };
 
-        // 1. Clear existing generic assignments for this date
-        clearDate(dateStr);
+        clearDateFlags(dateStr);
 
-        // 2. Apply new type
         if (selectedType === 'misogi') {
             newPlan.misogi.date = dateStr;
         } else if (selectedType === 'foundation') {
             newPlan.nonNegotiableDates.push(dateStr);
         } else if (selectedType === 'kevin') {
-            // Find first empty slot or just append to the first one for simplicity in this quick-edit mode
-            // For a robust app, we might want a modal. For now, we assign to the first event or create a dummy one if full.
-            let found = false;
-            for (let i = 0; i < 6; i++) {
-                if (newPlan.kevinRuleEvents[i]) {
-                    // simplistic: just add to the first event for now to mark the "day"
-                    // In reality, user might want to pick WHICH adventure. 
-                    // Users can refine in the specific tab.
-                    const current = newPlan.kevinRuleEvents[i].date ? newPlan.kevinRuleEvents[i].date.split(',') : [];
-                    current.push(dateStr);
-                    newPlan.kevinRuleEvents[i].date = current.join(',');
-                    found = true;
-                    break;
-                }
+            const targetIdx = selectedKevinIdx !== null ? selectedKevinIdx : newPlan.kevinRuleEvents.findIndex(e => !e || !e.date);
+            const idx = targetIdx === -1 ? 0 : targetIdx;
+
+            if (!newPlan.kevinRuleEvents[idx]) {
+                newPlan.kevinRuleEvents[idx] = { id: String(idx), title: "", description: "", date: "" };
             }
+
+            const currentDates = newPlan.kevinRuleEvents[idx].date ? newPlan.kevinRuleEvents[idx].date.split(',') : [];
+            currentDates.push(dateStr);
+            newPlan.kevinRuleEvents[idx].date = currentDates.sort((a, b) => Number(a) - Number(b)).join(',');
         }
 
         onUpdate(newPlan);
@@ -95,7 +123,7 @@ const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: any) => voi
         <div className="space-y-12 max-w-6xl mx-auto pb-24 px-4 overflow-hidden relative">
             <header className="flex flex-col md:flex-row justify-between items-center gap-8 bg-neutral-900/50 p-8 rounded-[2.5rem] border border-white/5">
                 <div className="space-y-2 text-center md:text-left">
-                    <h2 className="text-5xl font-black italic tracking-tighter uppercase leading-none text-white">THE BIG A## CALENDAR</h2>
+                    <h2 className="text-5xl font-black italic tracking-tighter uppercase leading-none text-white">THE BIG ANNUAL CALENDAR</h2>
                     <p className="text-neutral-500 font-black text-[10px] tracking-[0.3em] uppercase italic">The Year is your territory. Own it.</p>
                 </div>
 
@@ -154,65 +182,80 @@ const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: any) => voi
                                 {monthName}
                             </h4>
 
-                            {/* Weekday Headers */}
-                            <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                            {/* Weekday Headers - 8 Columns */}
+                            <div className="grid grid-cols-8 gap-1 text-center mb-2">
+                                <div /> {/* Space for week labels */}
                                 {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => (
                                     <div key={d} className="text-[10px] font-bold text-neutral-600">{d}</div>
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-7 gap-1.5">
-                                {/* Empty Padding Days */}
-                                {Array.from({ length: padding }).map((_, i) => (
-                                    <div key={`pad-${i}`} />
-                                ))}
-
-                                {/* Actual Days */}
-                                {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
-                                    const globalIndex = startOffset + dayIndex;
-                                    const dayData = days[globalIndex]; // Optimization: Access pre-calculated
-                                    const { isMisogi, isKevinRule, isNonNegotiable, isToday, isPast } = dayData;
+                            <div className="grid grid-cols-8 gap-x-1.5 gap-y-1.5">
+                                {Array.from({ length: Math.ceil((padding + daysInMonth) / 7) }).map((_, rowIndex) => {
+                                    // Calculate week number for this row
+                                    const firstDayOfRow = new Date(currentYear, monthIndex, 1 + (rowIndex * 7) - padding);
+                                    const weekNumDate = firstDayOfRow < date ? date : firstDayOfRow;
+                                    const weekNum = getWeekNumber(weekNumDate);
 
                                     return (
-                                        <div
-                                            key={dayIndex}
-                                            onClick={() => handleDateClick(globalIndex)}
-                                            className={`relative aspect-square rounded-sm group ${editMode ? 'cursor-pointer hover:ring-1 hover:ring-white/50' : 'pointer-events-none'}`}
-                                        >
-                                            {/* Base Day Tile */}
-                                            <div className={`absolute inset-0 rounded-sm transition-all duration-300 ${isMisogi
-                                                ? 'bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)] z-10 scale-110'
-                                                : isKevinRule
-                                                    ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10 scale-105'
-                                                    : isNonNegotiable
-                                                        ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
-                                                        : isToday
-                                                            ? 'bg-white ring-4 ring-white/20 z-10'
-                                                            : 'bg-neutral-900/40' // Removed hover effect here since container handles it
-                                                } ${editMode && !isMisogi && !isKevinRule && !isNonNegotiable ? 'hover:bg-neutral-800' : ''}`} />
-
-                                            {/* Sharpie Cross-out Animation for Past Days */}
-                                            {(isPast || isToday) && (
-                                                <svg className="absolute inset-0 w-full h-full text-white/40 pointer-events-none z-20" viewBox="0 0 100 100">
-                                                    <motion.path
-                                                        d="M 10,10 L 90,90 M 90,10 L 10,90"
-                                                        fill="transparent"
-                                                        stroke="currentColor"
-                                                        strokeWidth="15"
-                                                        strokeLinecap="round"
-                                                        initial={{ pathLength: 0, opacity: 0 }}
-                                                        animate={{ pathLength: 1, opacity: isToday ? 0.8 : 0.3 }}
-                                                        transition={{ duration: 0.8, ease: "easeInOut", delay: globalIndex * 0.0001 }} // faster stagger
-                                                    />
-                                                </svg>
-                                            )}
-
-                                            {/* Day Number */}
-                                            <div className={`absolute inset-0 flex items-center justify-center text-[8px] font-bold pointer-events-none ${isMisogi || isKevinRule || isNonNegotiable ? 'text-white' : 'text-neutral-600'
-                                                }`}>
-                                                {dayIndex + 1}
+                                        <React.Fragment key={rowIndex}>
+                                            <div className="text-[7px] font-black text-neutral-700 flex items-center justify-center border-r border-white/5 pr-1">
+                                                W{weekNum}
                                             </div>
-                                        </div>
+                                            {Array.from({ length: 7 }).map((_, colIndex) => {
+                                                const dayOfMonth = (rowIndex * 7) + colIndex - padding + 1;
+                                                if (dayOfMonth < 1 || dayOfMonth > daysInMonth) {
+                                                    return <div key={colIndex} />;
+                                                }
+
+                                                const dayIndex = dayOfMonth - 1;
+                                                const globalIndex = startOffset + dayIndex;
+                                                const dayData = days[globalIndex];
+                                                const { isMisogi, isKevinRule, isNonNegotiable, isToday, isPast } = dayData;
+
+                                                return (
+                                                    <div
+                                                        key={colIndex}
+                                                        onClick={() => handleDateClick(globalIndex)}
+                                                        className={`relative aspect-square rounded-sm group ${editMode ? 'cursor-pointer hover:ring-1 hover:ring-white/50' : 'pointer-events-none'}`}
+                                                    >
+                                                        {/* Base Day Tile */}
+                                                        <div className={`absolute inset-0 rounded-sm transition-all duration-300 ${isMisogi
+                                                            ? 'bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)] z-10 scale-110'
+                                                            : isKevinRule
+                                                                ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10 scale-105'
+                                                                : isNonNegotiable
+                                                                    ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
+                                                                    : isToday
+                                                                        ? 'bg-white ring-4 ring-white/20 z-10'
+                                                                        : 'bg-neutral-900/40'
+                                                            } ${editMode && !isMisogi && !isKevinRule && !isNonNegotiable ? 'hover:bg-neutral-800' : ''}`} />
+
+                                                        {/* Sharpie Cross-out Animation for Past Days */}
+                                                        {(isPast || isToday) && (
+                                                            <svg className="absolute inset-0 w-full h-full text-white/40 pointer-events-none z-20" viewBox="0 0 100 100">
+                                                                <motion.path
+                                                                    d="M 10,10 L 90,90 M 90,10 L 10,90"
+                                                                    fill="transparent"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="15"
+                                                                    strokeLinecap="round"
+                                                                    initial={{ pathLength: 0, opacity: 0 }}
+                                                                    animate={{ pathLength: 1, opacity: isToday ? 0.8 : 0.3 }}
+                                                                    transition={{ duration: 0.8, ease: "easeInOut", delay: globalIndex * 0.0001 }}
+                                                                />
+                                                            </svg>
+                                                        )}
+
+                                                        {/* Day Number */}
+                                                        <div className={`absolute inset-0 flex items-center justify-center text-[8px] font-bold pointer-events-none ${isMisogi || isKevinRule || isNonNegotiable ? 'text-white' : 'text-neutral-600'
+                                                            }`}>
+                                                            {dayOfMonth}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </React.Fragment>
                                     );
                                 })}
                             </div>
@@ -221,6 +264,79 @@ const BigACalendar: React.FC<BigACalendarProps & { onUpdate?: (plan: any) => voi
                 })}
             </div>
             {/* Footer remains same... */}
+            {/* Kevin's Rule Detailed Editor */}
+            <div className="space-y-8 glass-panel p-8 rounded-[3rem] border border-white/5 bg-neutral-900/20">
+                <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+                    <div className="space-y-2">
+                        <h3 className="text-3xl font-black italic uppercase text-white">THE 8-WEEK ADVENTURES</h3>
+                        <p className="text-neutral-500 font-black text-[10px] tracking-widest uppercase italic">One memory anchor every 8 weeks. No negotiation.</p>
+                    </div>
+                    {editMode && selectedKevinIdx !== null && (
+                        <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5 w-full md:w-auto">
+                            <span className="text-lg">🧠</span>
+                            <input
+                                placeholder="Interests? (Hiking, Music...)"
+                                className="bg-transparent border-none text-[10px] font-bold text-white outline-none w-full"
+                                value={interestInput}
+                                onChange={e => setInterestInput(e.target.value)}
+                            />
+                            <button
+                                onClick={() => handleAiSuggest(selectedKevinIdx)}
+                                disabled={suggestingKevin !== null}
+                                className="bg-white text-black px-4 py-2 rounded-lg text-[9px] font-black uppercase whitespace-nowrap"
+                            >
+                                {suggestingKevin === selectedKevinIdx ? 'PLANNING...' : 'AI SUGGEST'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {annualPlan.kevinRuleEvents.map((event, i) => {
+                        const isSelected = selectedKevinIdx === i;
+                        return (
+                            <div
+                                key={i}
+                                onClick={() => editMode && setSelectedKevinIdx(i)}
+                                className={`relative p-8 rounded-[2rem] border-2 transition-all cursor-pointer ${isSelected && editMode
+                                    ? 'border-blue-500 bg-blue-500/10 ring-4 ring-blue-500/20'
+                                    : event?.date
+                                        ? 'border-blue-500/30 bg-neutral-900/50 hover:border-white/20'
+                                        : 'border-white/5 bg-black/40 opacity-40 hover:opacity-100 hover:border-white/10'}`}
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">ADVENTURE 0{i + 1}</span>
+                                    {event?.date && <span className="text-[8px] font-black text-white/50 uppercase border border-white/10 px-2 py-1 rounded">DATED</span>}
+                                </div>
+
+                                {editMode && isSelected ? (
+                                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                                        <input
+                                            autoFocus
+                                            value={event?.title || ''}
+                                            onChange={e => handleUpdateEvent(i, { title: e.target.value })}
+                                            placeholder="The Experience Title..."
+                                            className="w-full bg-transparent border-none text-xl font-black italic text-white uppercase placeholder:text-neutral-800 outline-none p-0"
+                                        />
+                                        <textarea
+                                            value={event?.description || ''}
+                                            onChange={e => handleUpdateEvent(i, { description: e.target.value })}
+                                            placeholder="The Plan & Outcome..."
+                                            className="w-full bg-black/20 rounded-xl p-3 text-[10px] font-bold text-neutral-300 outline-none resize-none h-24 border border-white/5"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <h4 className="text-xl font-black italic text-white uppercase leading-tight line-clamp-1">{event?.title || 'UNSCHEDULED'}</h4>
+                                        <p className="text-[10px] font-bold text-neutral-500 uppercase line-clamp-2">{event?.description || 'Select days on calendar to start...'}</p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
             <footer className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                     { label: "Misogi", color: "bg-red-600" },

@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './components/Dashboard.tsx';
-import AnnualPlanner from './components/AnnualPlanner.tsx';
 import WeeklyWinComponent from './components/WeeklyWin.tsx';
 import AICoach from './components/AICoach.tsx';
 import YearPrep from './components/YearPrep.tsx';
@@ -32,7 +31,7 @@ const INITIAL_PLAN: AnnualPlan = {
     status: 'planned'
   },
   big4: [],
-  kevinRuleEvents: [],
+  kevinRuleEvents: Array(6).fill(null) as any,
   nonNegotiableDates: []
 };
 
@@ -43,19 +42,22 @@ const App: React.FC = () => {
       const parsed = JSON.parse(saved);
       // Migration: ensure new fields exist
       if (!parsed.annualPlan.nonNegotiableDates) parsed.annualPlan.nonNegotiableDates = [];
-      if (parsed.onboardingComplete === undefined) parsed.onboardingComplete = false;
+      if (!parsed.annualPlan.kevinRuleEvents || parsed.annualPlan.kevinRuleEvents.length === 0) {
+        parsed.annualPlan.kevinRuleEvents = Array(6).fill(null);
+      }
+      parsed.onboardingComplete = true; // Force skip onboarding
       return parsed;
     }
     return {
       annualPlan: INITIAL_PLAN,
       weeklyWins: [],
       prepChecklist: DEFAULT_PREP,
-      onboardingComplete: false
+      onboardingComplete: true
     };
   });
 
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('itzler_active_tab') || 'dashboard';
+    return localStorage.getItem('itzler_active_tab') || 'prep';
   });
 
   useEffect(() => {
@@ -71,7 +73,16 @@ const App: React.FC = () => {
   };
 
   const addWeeklyWin = (win: WeeklyWin) => {
-    setState(prev => ({ ...prev, weeklyWins: [win, ...prev.weeklyWins] }));
+    setState(prev => {
+      const existingIdx = prev.weeklyWins.findIndex(w => w.weekStart === win.weekStart);
+      const newWins = [...prev.weeklyWins];
+      if (existingIdx >= 0) {
+        newWins[existingIdx] = win;
+      } else {
+        newWins.unshift(win);
+      }
+      return { ...prev, weeklyWins: newWins };
+    });
     setActiveTab('dashboard');
   };
 
@@ -89,18 +100,14 @@ const App: React.FC = () => {
     setActiveTab('calendar');
   };
 
-  if (!state.onboardingComplete) {
-    return <Onboarding onComplete={completeOnboarding} />;
-  }
+  // Onboarding sequence is bypassed to land directly on Dashboard.
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-      {activeTab === 'dashboard' && <Dashboard state={state} />}
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} state={state}>
+      {activeTab === 'dashboard' && <Dashboard state={state} onUpdate={updateAnnualPlan} />}
       {activeTab === 'calendar' && <BigACalendar state={state} onUpdate={updateAnnualPlan} />}
       {activeTab === 'prep' && <YearPrep checklist={state.prepChecklist} onToggle={togglePrepItem} />}
-      {activeTab === 'annual' && <AnnualPlanner plan={state.annualPlan} onUpdate={updateAnnualPlan} />}
-      {activeTab === 'weekly' && <WeeklyWinComponent annualPlan={state.annualPlan} onSave={addWeeklyWin} />}
-      {activeTab === 'coach' && <AICoach state={state} />}
+      {activeTab === 'weekly' && <WeeklyWinComponent annualPlan={state.annualPlan} weeklyWins={state.weeklyWins} onSave={addWeeklyWin} />}
     </Layout>
   );
 };

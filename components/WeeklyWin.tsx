@@ -1,16 +1,27 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WeeklyWin, AnnualPlan, Goal } from '../types.ts';
 import { CATEGORIES } from '../constants.tsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface WeeklyWinProps {
   annualPlan: AnnualPlan;
+  weeklyWins: WeeklyWin[];
   onSave: (win: WeeklyWin) => void;
 }
 
-const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ annualPlan, onSave }) => {
+// Helper to get start of current week (Sunday)
+const getWeekStart = (d: Date) => {
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  const sun = new Date(d.setDate(diff));
+  sun.setHours(0, 0, 0, 0);
+  return sun.toLocaleDateString();
+};
+
+const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ annualPlan, weeklyWins, onSave }) => {
   const [mode, setMode] = useState<'planning' | 'reviewing'>('planning');
+  const currentWeekDate = getWeekStart(new Date());
 
   // State for the specific weekly tasks associated with each Big 4 Category
   const [tasks, setTasks] = useState<Record<string, string>>({
@@ -23,6 +34,27 @@ const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ annualPlan, onSave }) =>
   });
 
   const [reflection, setReflection] = useState('');
+
+  // Load existing data if found for this week
+  useEffect(() => {
+    const existing = weeklyWins.find(w => w.weekStart === currentWeekDate);
+    if (existing) {
+      const newTasks: Record<string, string> = {};
+      const newCompleted: Record<string, boolean> = {};
+      existing.big4Wins.forEach(w => {
+        newTasks[w.category] = w.task;
+        newCompleted[w.category] = w.completed;
+      });
+      setTasks(newTasks);
+      setCompleted(newCompleted);
+      setReflection(existing.reflections);
+
+      // If we already have a planned win, default to reviewing mode
+      if (existing.status === 'planned') {
+        setMode('reviewing');
+      }
+    }
+  }, [weeklyWins, currentWeekDate]);
 
   // Calculate score based on completion count
   const completedCount = Object.values(completed).filter(c => c).length;
@@ -37,21 +69,15 @@ const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ annualPlan, onSave }) =>
 
     onSave({
       id: Math.random().toString(36).substr(2, 9),
-      weekStart: new Date().toLocaleDateString(),
+      weekStart: currentWeekDate,
       big4Wins,
       reflections: reflection,
       score: score,
       status: mode === 'planning' ? 'planned' : 'completed'
     });
 
-    // Reset or navigate away? For now just alert or simple reset
     if (mode === 'reviewing') {
       alert(`Week Recorded! Score: ${score}%`);
-      // Reset for next week
-      setMode('planning');
-      setTasks({ 'Health': '', 'Wealth': '', 'Relationship': '', 'Self': '' });
-      setCompleted({ 'Health': false, 'Wealth': false, 'Relationship': false, 'Self': false });
-      setReflection('');
     }
   };
 
@@ -159,8 +185,8 @@ const WeeklyWinComponent: React.FC<WeeklyWinProps> = ({ annualPlan, onSave }) =>
         <button
           onClick={handleSave}
           className={`px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all hover:scale-105 shadow-2xl ${mode === 'planning'
-              ? 'bg-white text-black hover:bg-neutral-200'
-              : 'bg-green-600 text-white hover:bg-green-500'
+            ? 'bg-white text-black hover:bg-neutral-200'
+            : 'bg-green-600 text-white hover:bg-green-500'
             }`}
         >
           {mode === 'planning' ? 'Lock In The Plan' : 'Submit Weekly Review'}

@@ -28,11 +28,14 @@ CORE PHILOSOPHY:
 3. MEMORY ANCHORS: Kevin's Rule (one experience every 8 weeks) and Misogi (one 50/50 challenge/year) are the antidotes. They "stretch" time by creating distinct milestones.
 4. NO NEGOTIATION: Once it's on the calendar, the debate is over.
 
+GUIDELINES:
+- KEEP IT FAMILY FRIENDLY. NO SWEARING AT ALL. 
+- BE AGGRESSIVE AND MOTIVATIONAL BUT PROFESSIONAL.
+
 FORMATTING:
 - Use **Markdown** to make labels and key points stand out.
 - Use # or ## for emphasis sparingly, mostly use ### for sections.
 - Use bullet points for action items.
-- BE AGGRESSIVE AND MOTIVATIONAL.
 
 Plan Details: ${JSON.stringify(plan)}
 Recent Wins: ${JSON.stringify(weeklyHistory)}
@@ -61,7 +64,11 @@ export const suggestMisogi = async (interests: string, theme: string) => {
 Interests: ${interests}. 
 
 Suggest ONE Misogi (a 50/50 challenge) that fits BOTH the interests and pushes the boundaries of the "Annual Theme". 
-Return ONLY a JSON object with this structure: {"title": "string", "description": "string"}`;
+Return ONLY a JSON object with this structure: {"title": "string", "description": "string"}
+
+GUIDELINES:
+- KEEP IT FAMILY FRIENDLY. NO SWEARING AT ALL.
+- THE DESCRIPTION SHOULD BE MOTIVATIONAL BUT CLEAN.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -97,6 +104,7 @@ CRITERIA:
 - Must be significant enough to stand out in memory.
 - Must NOT be something the user would normally do in daily life.
 - Doesn't have to be physically grueling (unlike a Misogi), just unique.
+- KEEP IT FAMILY FRIENDLY. NO SWEARING AT ALL.
 
 Return ONLY a JSON object: {"title": "Title of Adventure", "description": "Brief Plan: 1. [Step 1] 2. [Step 2] 3. [Outcome]"}`;
 

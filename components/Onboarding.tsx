@@ -61,7 +61,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 className="space-y-6"
             >
                 <p className="text-xl font-bold text-neutral-400 uppercase tracking-tight">
-                    We’re breaking that. The Big A## Calendar isn’t about appointments; it’s about <span className="text-white underline decoration-red-600 decoration-4 underline-offset-8">territory</span>.
+                    We’re breaking that. The Big Annual Calendar isn’t about appointments; it’s about <span className="text-white underline decoration-red-600 decoration-4 underline-offset-8">territory</span>.
                 </p>
                 <p className="text-sm font-black text-neutral-600 uppercase tracking-widest">
                     If you don't claim your time, someone else will. We are going to map out your next 365 days right now.

@@ -1,20 +1,21 @@
-
 import React from 'react';
+import AICoach from './AICoach.tsx';
+import { AppState } from '../types.ts';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  state: AppState;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, state }) => {
+  const [showCoach, setShowCoach] = React.useState(false);
   const tabs = [
+    { id: 'prep', label: 'Prep', icon: '📝', highlight: true },
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'calendar', label: 'Big A## Calendar', icon: '📅' },
-    { id: 'prep', label: 'Prep', icon: '📝' },
-    { id: 'annual', label: 'Annual Plan', icon: '📅' },
+    { id: 'calendar', label: 'Big Annual Calendar', icon: '📅' },
     { id: 'weekly', label: 'Weekly Win', icon: '⚡' },
-    { id: 'coach', label: 'AI Coach', icon: '🧠' },
   ];
 
   return (
@@ -33,7 +34,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === tab.id ? 'text-red-600 border-b-2 border-red-600 pb-1' : 'text-slate-500 hover:text-white'
+              className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all px-3 py-1.5 rounded-lg ${activeTab === tab.id
+                ? 'text-white bg-red-600'
+                : (tab as any).highlight
+                  ? 'text-black bg-white hover:bg-neutral-200'
+                  : 'text-slate-500 hover:text-white'
                 }`}
             >
               {tab.label}
@@ -41,6 +46,18 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           ))}
         </nav>
       </header>
+
+      {/* Floating AI Coach Trigger */}
+      <button
+        onClick={() => setShowCoach(!showCoach)}
+        className="fixed bottom-8 left-8 z-[110] w-14 h-14 bg-white rounded-full flex items-center justify-center text-2xl shadow-2xl hover:scale-110 active:scale-95 transition-all border-2 border-slate-100"
+      >
+        <span>🧠</span>
+      </button>
+
+      {showCoach && (
+        <AICoach state={state} isPopUp onClose={() => setShowCoach(false)} />
+      )}
 
       <main className="flex-1 container mx-auto px-4 py-10 max-w-6xl">
         {children}
