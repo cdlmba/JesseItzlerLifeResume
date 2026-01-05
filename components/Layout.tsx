@@ -12,7 +12,8 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, state }) => {
   const [showCoach, setShowCoach] = React.useState(false);
   const tabs = [
-    { id: 'prep', label: 'Prep', icon: '📝', highlight: true },
+    { id: 'start', label: 'Start Here', icon: '🚀', highlight: 'green' },
+    { id: 'prep', label: 'Prep', icon: '📝', highlight: 'white' },
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'calendar', label: 'Big Annual Calendar', icon: '📅' },
     { id: 'weekly', label: 'Weekly Win', icon: '⚡' },
@@ -29,16 +30,18 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, stat
             LIFE RESUME<span className="text-red-600 italic">.</span>
           </h1>
         </div>
-        <nav className="hidden md:flex gap-8">
+        <nav className="hidden md:flex gap-4">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all px-3 py-1.5 rounded-lg ${activeTab === tab.id
                 ? 'text-white bg-red-600'
-                : (tab as any).highlight
-                  ? 'text-black bg-white hover:bg-neutral-200'
-                  : 'text-slate-500 hover:text-white'
+                : tab.highlight === 'green'
+                  ? 'text-black bg-green-500 hover:bg-green-400'
+                  : tab.highlight === 'white'
+                    ? 'text-black bg-white hover:bg-neutral-200'
+                    : 'text-slate-500 hover:text-white'
                 }`}
             >
               {tab.label}

@@ -7,6 +7,7 @@ import AICoach from './components/AICoach.tsx';
 import YearPrep from './components/YearPrep.tsx';
 import Onboarding from './components/Onboarding.tsx';
 import BigACalendar from './components/BigACalendar.tsx';
+import StartHere from './components/StartHere.tsx';
 import { AppState, AnnualPlan, WeeklyWin, PrepItem } from './types.ts';
 
 const DEFAULT_PREP: PrepItem[] = [
@@ -57,7 +58,7 @@ const App: React.FC = () => {
   });
 
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('itzler_active_tab') || 'prep';
+    return localStorage.getItem('itzler_active_tab') || 'start';
   });
 
   useEffect(() => {
@@ -104,6 +105,7 @@ const App: React.FC = () => {
 
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab} state={state}>
+      {activeTab === 'start' && <StartHere />}
       {activeTab === 'dashboard' && <Dashboard state={state} onUpdate={updateAnnualPlan} />}
       {activeTab === 'calendar' && <BigACalendar state={state} onUpdate={updateAnnualPlan} />}
       {activeTab === 'prep' && <YearPrep checklist={state.prepChecklist} onToggle={togglePrepItem} />}
